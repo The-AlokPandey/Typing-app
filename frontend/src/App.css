@@ -1,0 +1,54 @@
+/* पूरी स्क्रीन को सेंटर और डार्क करने के लिए */
+body {
+  background-color: #121212;
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* सब कुछ बीच में लाएगा */
+}
+
+/* मेन बॉक्स का डिज़ाइन */
+.typing-container {
+  background: #1e1e2e;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  margin-top: 50px;
+  width: 90vw;
+  max-width: 800px; /* बॉक्स को बड़ा करेगा */
+  text-align: center;
+}
+
+/* जो टेक्स्ट टाइप करना है उसका डिज़ाइन */
+.text-display {
+  font-size: 24px;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  background: #2a2a35;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* टाइपिंग वाला बड़ा बॉक्स */
+.type-box {
+  width: 100%;
+  height: 150px; /* बॉक्स की ऊंचाई बढ़ा दी गई है */
+  background: #2a2a35;
+  color: #fff;
+  border: 2px solid #3f3f5a;
+  border-radius: 10px;
+  padding: 20px;
+  font-size: 24px; /* टाइपिंग का फॉन्ट बड़ा किया */
+  outline: none;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.type-box:focus {
+  border-color: #00ffcc; /* निऑन कलर का ग्लो */
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+}
