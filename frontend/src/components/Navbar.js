@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -12,20 +12,18 @@ const Navbar = () => {
     };
 
     return (
-        <nav style={{ padding: '15px', background: '#333', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <Link to="/" style={{ color: 'white', margin: '0 15px', textDecoration: 'none' }}>Typing Test</Link>
+        <nav className="site-nav" aria-label="Main navigation">
+            <NavLink to="/" end>Practice</NavLink>
             
             {token ? (
-                /* Shows only if user is logged in */
                 <>
-                    <Link to="/dashboard" style={{ color: 'white', margin: '0 15px', textDecoration: 'none' }}>Dashboard</Link>
-                    <button onClick={handleLogout} style={{ background: 'red', color: 'white', border: 'none', padding: '8px 15px', cursor: 'pointer', borderRadius: '5px', marginLeft: '15px' }}>Logout</button>
+                    <NavLink to="/dashboard">Progress</NavLink>
+                    <button onClick={handleLogout} className="nav-logout" type="button">Log out</button>
                 </>
             ) : (
-                /* Shows only if user is logged out */
                 <>
-                    <Link to="/login" style={{ color: 'white', margin: '0 15px', textDecoration: 'none' }}>Login</Link>
-                    <Link to="/register" style={{ color: 'white', margin: '0 15px', textDecoration: 'none' }}>Register</Link>
+                    <NavLink to="/login">Log in</NavLink>
+                    <NavLink to="/register">Sign up</NavLink>
                 </>
             )}
         </nav>

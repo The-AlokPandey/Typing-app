@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Register from './components/Register'; 
@@ -21,37 +21,33 @@ function App() {
 
   return (
     <Router>
-      {/* 1. नाम को सबसे ऊपर दाईं ओर (Top-Right) सेट कर दिया */}
-      <div style={{ position: 'absolute', top: '15px', right: '20px' }}>
-         {userName && <b style={{ color: '#28a745', fontSize: '16px' }}>Welcome, {userName}! 👤</b>}
+      <header className="site-header">
+        <Link to="/" className="site-brand">
+          <span className="site-brand-mark" aria-hidden="true">⌁</span>
+          <span>KEYFLOW <span style={{ color: 'var(--muted)', fontWeight: 500 }}>TYPING STUDIO</span></span>
+        </Link>
+        <Navbar />
+        {userName && <span className="welcome-user">Welcome, {userName}</span>}
+      </header>
+      
+      <div className="route-content">
+        <Routes>
+          <Route path="/" element={
+            <ProtectedRoute>
+              <TypingTest />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/login" element={<Login setUserName={setUserName} />} />
+          <Route path="/register" element={<Register setUserName={setUserName} />} />
+        </Routes>
       </div>
-
-      {/* 2. मेन हेडिंग को बीच में रखा है */}
-      <h1 style={{ textAlign: 'center', marginTop: '40px', color: '#1a6e9f' }}>Typing Speed App</h1>
-      
-      {/* 3. Navbar को एकदम सेंटर (बीच) में लाने के लिए flex और center का इस्तेमाल */}
-      
-         <Navbar />
-      
-      <Routes>
-        {/* Wrap TypingTest and Dashboard inside ProtectedRoute */}
-        <Route path="/" element={
-            <ProtectedRoute>
-                <TypingTest />
-            </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
-            <ProtectedRoute>
-                <Dashboard />
-            </ProtectedRoute>
-        } />
-        
-        {/* Public Routes */}
-        <Route path="/login" element={<Login setUserName={setUserName} />} />
-        <Route path="/register" element={<Register setUserName={setUserName} />} />
-      </Routes>
     </Router>
   );
-} // 4. App फंक्शन का क्लोजिंग ब्रैकेट
+}
 
 export default App;

@@ -35,6 +35,8 @@ const hindiTexts = [
 const TypingTest = () => {
     const [lang, setLang] = useState('english');
     const [selectedTime, setSelectedTime] = useState(600); // Default 10 Minutes
+    const [textLength, setTextLength] = useState(0);
+    const [theme, setTheme] = useState(() => localStorage.getItem('typing-theme') || 'mint');
     const [text, setText] = useState(englishTexts[0]);
     const [input, setInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(600); 
@@ -45,6 +47,10 @@ const TypingTest = () => {
     
     // Auto-scroll के लिए नया Ref
     const textDisplayRef = useRef(null);
+
+    useEffect(() => {
+        localStorage.setItem('typing-theme', theme);
+    }, [theme]);
 
     // टाइमर का लॉजिक
     useEffect(() => {
@@ -73,10 +79,10 @@ const TypingTest = () => {
         }
     }, [input]);
 
-    const loadNewText = (selectedLang, timeValue = selectedTime) => {
+    const loadNewText = (selectedLang, timeValue = selectedTime, wordLimit = textLength) => {
         const texts = selectedLang === 'english' ? englishTexts : hindiTexts;
         const randomText = texts[Math.floor(Math.random() * texts.length)];
-        setText(randomText);
+        setText(wordLimit === 0 ? randomText : randomText.split(/\s+/).slice(0, wordLimit).join(' '));
         setInput('');
         setTimeLeft(timeValue);
         setIsActive(false);
@@ -90,15 +96,21 @@ const TypingTest = () => {
         }
     };
 
-    const handleLangChange = (e) => {
-        setLang(e.target.value);
-        loadNewText(e.target.value, selectedTime);
+    const handleLangChange = (selectedLang) => {
+        setLang(selectedLang);
+        loadNewText(selectedLang, selectedTime);
     };
 
-    const handleTimeChange = (e) => {
-        const newTime = parseInt(e.target.value);
+    const handleTimeChange = (seconds) => {
+        const newTime = Number(seconds);
         setSelectedTime(newTime);
         loadNewText(lang, newTime);
+    };
+
+    const handleLengthChange = (words) => {
+        const newLength = Number(words);
+        setTextLength(newLength);
+        loadNewText(lang, selectedTime, newLength);
     };
 
     const handleChange = (e) => {
@@ -167,55 +179,84 @@ const TypingTest = () => {
     };
 
     return (
-        <div className="typing-container">
-            <h2 style={{ color: '#00ffcc' }}>Typing Speed App</h2>
+        <main className={`typing-app theme-${theme}`}>
+            <header className="typing-header">
+                <div className="brand-mark" aria-hidden="true">⌁</div>
+                <div>
+                    <p className="eyebrow">YOUR DAILY KEYBOARD STUDIO</p>
+                    <h1>Find your <span>flow.</span></h1>
+                    <p className="header-copy">A little practice goes a long way. Set your pace and get in the zone.</p>
+                </div>
+                <div className="header-badge"><span className="status-dot" /> READY WHEN YOU ARE</div>
+            </header>
             
-            {/* Exam Instructions Box */}
-            <div style={{ background: '#2a2a35', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'left', borderLeft: '4px solid #ffb86c' }}>
-                <h4 style={{ margin: '0 0 10px 0', color: '#ffb86c' }}>🏆 Exam Instructions (SSC & Others):</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '15px', lineHeight: '1.6', color: '#e0e0e0' }}>
-                    <li><b>Time Setting:</b> SSC CHSL/CGL, HighCourt RO/ARO LDC, RRB NTPC typing test ke liye time <b>10 ya 15 minute</b> set karein.</li>
-                    <li><b>Accuracy:</b> Exam me qualify hone ke liye kam se kam <b>95% accuracy</b> maintain karne ki koshish karein.</li>
-                    <li><b>Language:</b> Hindi typing ke liye 'Hindi (Mangal)' select karein.</li>
-                </ul>
+            <section className="practice-card">
+                <div className="section-heading">
+                    <div>
+                        <p className="eyebrow">MAKE IT YOURS</p>
+                        <h2>Set up a session</h2>
+                    </div>
+                    <button className="refresh-button" onClick={() => loadNewText(lang)} type="button">
+                        <span aria-hidden="true">↻</span> New passage
+                    </button>
+                </div>
+
+                <div className="settings-grid">
+                    <fieldset className="setting-group">
+                        <legend>Language</legend>
+                        <div className="choice-row">
+                            <button className={`choice-button ${lang === 'english' ? 'selected' : ''}`} onClick={() => handleLangChange('english')} type="button" aria-pressed={lang === 'english'}>English</button>
+                            <button className={`choice-button ${lang === 'hindi' ? 'selected' : ''}`} onClick={() => handleLangChange('hindi')} type="button" aria-pressed={lang === 'hindi'}>Hindi</button>
+                        </div>
+                    </fieldset>
+                    <fieldset className="setting-group">
+                        <legend>Time</legend>
+                        <div className="choice-row time-choices">
+                            {[30, 60, 120, 300, 600, 900].map((seconds) => (
+                                <button key={seconds} className={`choice-button ${selectedTime === seconds ? 'selected' : ''}`} onClick={() => handleTimeChange(seconds)} type="button" aria-pressed={selectedTime === seconds}>
+                                    {seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}
+                                </button>
+                            ))}
+                        </div>
+                    </fieldset>
+                    <fieldset className="setting-group">
+                        <legend>Passage size</legend>
+                        <div className="choice-row">
+                            {[['50', 'Quick'], ['100', 'Standard'], ['0', 'Full']].map(([value, label]) => (
+                                <button key={value} className={`choice-button ${textLength === Number(value) ? 'selected' : ''}`} onClick={() => handleLengthChange(value)} type="button" aria-pressed={textLength === Number(value)}>{label}</button>
+                            ))}
+                        </div>
+                    </fieldset>
+                    <fieldset className="setting-group">
+                        <legend>Color mood</legend>
+                        <div className="theme-choices" role="group" aria-label="Color mood">
+                            {['mint', 'violet', 'sunset', 'ocean'].map((option) => (
+                                <button key={option} className={`theme-swatch swatch-${option} ${theme === option ? 'selected' : ''}`} onClick={() => setTheme(option)} type="button" aria-label={`${option} theme`} aria-pressed={theme === option} />
+                            ))}
+                        </div>
+                    </fieldset>
+                </div>
+            </section>
+
+            <div className="session-status">
+                <div><span className="status-label">TIME LEFT</span><strong>{formatTime(timeLeft)}</strong></div>
+                <div><span className="status-label">LANGUAGE</span><strong>{lang === 'hindi' ? 'Hindi' : 'English'}</strong></div>
+                <div><span className="status-label">TARGET</span><strong>{textLength === 0 ? 'Full passage' : `${textLength} words`}</strong></div>
             </div>
-
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center', gap: '15px' }}>
-                <select value={lang} onChange={handleLangChange} style={dropdownStyle}>
-                    <option value="english">English</option>
-                    <option value="hindi">Hindi (Mangal)</option>
-                </select>
-
-                <select value={selectedTime} onChange={handleTimeChange} style={dropdownStyle}>
-                    <option value={60}>1 Minute</option>
-                    <option value={300}>5 Minutes</option>
-                    <option value={600}>10 Minutes</option>
-                    <option value={900}>15 Minutes</option>
-                </select>
-
-                <button onClick={() => loadNewText(lang)} style={{ padding: '8px 15px', fontSize: '16px', background: '#3f3f5a', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                    Refresh Text
-                </button>
-            </div>
-
-            <h3 style={{ color: '#ff4c4c', fontSize: '28px' }}>Time Left: {formatTime(timeLeft)}</h3>
             
-            {/* Text Display - Updated for Auto Scroll */}
-            <div 
-                className="text-display" 
+            <section className="typing-workspace">
+                <div className="workspace-heading"><span>PASSAGE</span><span className="live-indicator"><i /> LIVE PRACTICE</span></div>
+                <div
+                className="text-display"
                 ref={textDisplayRef} // Ref जोड़ा गया
                 style={{ 
                     fontFamily: lang === 'hindi' ? 'Mangal, Arial' : 'Courier New, Courier, monospace',
-                    maxHeight: '115px', // सिर्फ 3 लाइनें दिखेंगी
-                    overflow: 'hidden', // फालतू टेक्स्ट छुप जाएगा
+                    maxHeight: '175px',
+                    overflow: 'auto',
                     position: 'relative',
-                    lineHeight: '35px', 
-                    fontSize: '22px',
-                    backgroundColor: '#1e1e2e',
-                    padding: '15px',
-                    borderRadius: '8px',
+                    lineHeight: '1.9',
                     textAlign: 'left',
-                    scrollBehavior: 'smooth' // स्मूथ स्क्रॉलिंग
+                    scrollBehavior: 'smooth'
                 }}
             >
                 {text.split('').map((char, index) => {
@@ -248,32 +289,37 @@ const TypingTest = () => {
                 value={input}
                 onChange={handleChange}
                 disabled={timeLeft === 0}
-                placeholder="Start typing here..."
+                placeholder="Start typing here… your timer begins with your first keystroke."
                 style={{ fontFamily: lang === 'hindi' ? 'Mangal, Arial' : 'Courier New, Courier, monospace', marginTop: '15px' }}
+                aria-label="Type the passage here"
             />
             
 
-<div style={{ textAlign: 'center' }}>
+            <div className="submit-row">
                 <button 
+                    className="submit-button"
                     onClick={handleSubmit}
                     disabled={timeLeft === 0 || input.length === 0}
-                    style={{ marginTop: '15px', padding: '10px 25px', fontSize: '16px', background: '#00ffcc', color: '#1e1e2e', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
-                    Submit Test
+                    Finish session <span aria-hidden="true">→</span>
                 </button>
+                <span className="keyboard-hint">Your timer starts when you type</span>
             </div>
+            </section>
 
             {timeLeft === 0 && (
-                <div style={{ marginTop: '20px' }}>
-                    <h2>Final Speed: {wpm} WPM</h2>
-                    <h3 style={{ color: '#ffb86c' }}>Mistakes: {mistakes}</h3>
-                    <h3 style={{ color: '#00ffcc' }}>Accuracy: {accuracy}%</h3>
+                <div className="results-card">
+                    <p className="eyebrow">SESSION COMPLETE</p>
+                    <h2>Nice work. Keep that momentum.</h2>
+                    <div className="results-grid">
+                        <div><strong>{wpm}</strong><span>WPM</span></div>
+                        <div><strong>{accuracy}%</strong><span>ACCURACY</span></div>
+                        <div><strong>{mistakes}</strong><span>MISTAKES</span></div>
+                    </div>
                 </div>
             )}
-        </div>
+        </main>
     );
 };
-
-const dropdownStyle = { padding: '8px', fontSize: '16px', background: '#2a2a35', color: '#fff', border: '1px solid #00ffcc', borderRadius: '5px', outline: 'none' };
 
 export default TypingTest;
