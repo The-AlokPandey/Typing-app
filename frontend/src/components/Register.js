@@ -1,56 +1,99 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../App.css';
 
 const Register = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError('');
+        setIsSubmitting(true);
+
         try {
             const response = await fetch('/api/users/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password })
+                body: JSON.stringify({
+                    name: name.trim(),
+                    email: email.trim(),
+                    password
+                })
             });
-            
-            if (response.ok) {
-                alert("Registration Successful! Please login.");
-                navigate('/login');
-            } else {
-                alert("Registration failed!");
+
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error('The server returned an invalid response. Please try again.');
             }
-        } catch (error) {
-            console.error("Error during registration:", error);
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed. Please try again.');
+            }
+
+            navigate('/login', { state: { message: 'Your account is ready. Log in to start practicing.' } });
+        } catch (requestError) {
+            setError(requestError.message || 'Could not connect to the server. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="typing-container" style={{ maxWidth: '400px' }}>
-            <h2>Register</h2>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-                <input 
-                    type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required 
-                    style={inputStyle}
+        <main className="auth-card">
+            <p className="eyebrow">START YOUR STREAK</p>
+            <h1>Make room for flow.</h1>
+            <p className="auth-copy">Create an account to practice at your pace and keep an eye on your progress.</p>
+
+            <form className="auth-form" onSubmit={handleSubmit}>
+                <label htmlFor="register-name">Name</label>
+                <input
+                    id="register-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    required
                 />
-                <input 
-                    type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required 
-                    style={inputStyle}
+                <label htmlFor="register-email">Email</label>
+                <input
+                    id="register-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
                 />
-                <input 
-                    type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required 
-                    style={inputStyle}
+                <label htmlFor="register-password">Password</label>
+                <input
+                    id="register-password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Choose a password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
                 />
-                <button type="submit" style={btnStyle}>Register</button>
+                {error && <p className="auth-error" role="alert">{error}</p>}
+                <button className="auth-submit" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating account…' : 'Create account'}
+                </button>
             </form>
-        </div>
+
+            <p className="auth-switch">Already have an account? <Link to="/login">Log in</Link></p>
+        </main>
     );
 };
-
-const inputStyle = { padding: '15px', borderRadius: '8px', border: '2px solid #3f3f5a', background: '#2a2a35', color: '#fff', fontSize: '16px', outline: 'none' };
-const btnStyle = { padding: '12px', borderRadius: '8px', border: 'none', background: '#00ffcc', color: '#121212', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' };
 
 export default Register;

@@ -1,53 +1,90 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../App.css';
 
-const Login = () => {
+const Login = ({ setUserName }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError('');
+        setIsSubmitting(true);
+
         try {
             const response = await fetch('/api/users/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email: email.trim(), password })
             });
-            const data = await response.json();
 
-            if (response.ok) {
-                localStorage.setItem('token', data.token);
-                navigate('/'); 
-                window.location.reload(); 
-            } else {
-                alert(data.message || "Login failed!");
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error('The server returned an invalid response. Please try again.');
             }
-        } catch (error) {
-            console.error("Error during login:", error);
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed. Check your email and password.');
+            }
+            if (!data.token) {
+                throw new Error('Login succeeded, but the server did not return an access token.');
+            }
+
+            localStorage.setItem('token', data.token);
+            if (setUserName) setUserName(data.name || email.trim());
+            navigate('/');
+        } catch (requestError) {
+            setError(requestError.message || 'Could not connect to the server. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="typing-container" style={{ maxWidth: '400px' }}>
-            <h2>Login</h2>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-                <input 
-                    type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required 
-                    style={inputStyle}
+        <main className="auth-card">
+            <p className="eyebrow">WELCOME BACK</p>
+            <h1>Pick up your flow.</h1>
+            <p className="auth-copy">Log in to continue your typing practice and track your progress.</p>
+            {location.state?.message && <p className="auth-success" role="status">{location.state.message}</p>}
+
+            <form className="auth-form" onSubmit={handleSubmit}>
+                <label htmlFor="login-email">Email</label>
+                <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
                 />
-                <input 
-                    type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required 
-                    style={inputStyle}
+                <label htmlFor="login-password">Password</label>
+                <input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
                 />
-                <button type="submit" style={btnStyle}>Login</button>
+                {error && <p className="auth-error" role="alert">{error}</p>}
+                <button className="auth-submit" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Logging in…' : 'Log in'}
+                </button>
             </form>
-        </div>
+
+            <p className="auth-switch">New here? <Link to="/register">Create an account</Link></p>
+        </main>
     );
 };
-
-const inputStyle = { padding: '15px', borderRadius: '8px', border: '2px solid #3f3f5a', background: '#2a2a35', color: '#fff', fontSize: '16px', outline: 'none' };
-const btnStyle = { padding: '12px', borderRadius: '8px', border: 'none', background: '#00ffcc', color: '#121212', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' };
 
 export default Login;
